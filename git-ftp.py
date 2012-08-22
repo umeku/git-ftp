@@ -13,7 +13,7 @@ files (the "Software"), to deal in the Software without
 restriction, including without limitation the rights to use,
 copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following
+	Software is furnished to do so, subject to the following
 conditions:
 
 The above copyright notice and this permission notice shall be
@@ -66,7 +66,10 @@ class FtpSslNotSupported(Exception):
 def main():
     Git.git_binary = 'git' # Windows doesn't like env
 
-    repo, options, args = parse_args()
+    try:
+        repo, options, args = parse_args()
+    except BranchNotFound:
+        exit()
 
     if repo.is_dirty() and not options.commit:
         logging.warning("Working copy is dirty; uncommitted changes will NOT be uploaded")
@@ -194,6 +197,10 @@ def get_ftp_creds(repo, options):
         if (not cfg.has_section(options.branch)) and cfg.has_section('ftp'):
             raise FtpDataOldVersion("Please rename the [ftp] section to [branch]. " +
                                     "Take a look at the README for more information")
+
+        if (not cfg.has_section(options.branch)):
+            logging.error("Please configure settings for branch '%s'" % options.branch)
+            raise BranchNotFound()
 
         # just in case you do not want to store your ftp password.
         try:
